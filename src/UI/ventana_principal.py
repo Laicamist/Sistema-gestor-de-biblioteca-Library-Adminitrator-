@@ -10,6 +10,7 @@ from UI import tema
 from UI.componentes import (
     Aviso, BotonIcono, FondoAero, LogoGel, PanelVidrio, Sonidos, etiqueta, fundido,
 )
+from UI.pantallas.alumnos import PantallaAlumnos
 from UI.pantallas.catalogo import PantallaCatalogo
 from UI.pantallas.inicio import PantallaInicio
 from UI.pantallas.lector import PantallaLector
@@ -46,6 +47,7 @@ PANTALLAS = {
     "inicio": PantallaInicio,
     "lector": PantallaLector,
     "catalogo": PantallaCatalogo,
+    "alumnos": PantallaAlumnos,
 }
 
 

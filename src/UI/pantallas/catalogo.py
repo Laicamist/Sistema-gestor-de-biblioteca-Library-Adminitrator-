@@ -10,21 +10,11 @@ from Logic.catalogo_servicio import ESTADOS_MANUALES
 from Modelos import BibliotecaError, SinConexionError
 from UI import iconos, tema
 from UI.componentes import (
-    Aviso, BotonIcono, Insignia, PanelVidrio, Tabla, boton_gel, confirmar, etiqueta,
+    Aviso, BotonIcono, Insignia, PanelVidrio, Tabla, boton_gel, celda_insignia, confirmar, etiqueta,
 )
 from UI.pantallas.base import Pantalla
 
 TIPO_ESTADO = {"DISPONIBLE": "ok", "PRESTADO": "advertencia", "MANTENIMIENTO": "info", "BAJA": "error"}
-
-
-def _celda_insignia(texto: str, tipo: str) -> QWidget:
-    """Insignia de color dentro de una celda de tabla."""
-    celda = QWidget()
-    fila = QHBoxLayout(celda)
-    fila.setContentsMargins(6, 0, 6, 0)
-    fila.addWidget(Insignia(texto, tipo))
-    fila.addStretch(1)
-    return celda
 
 
 class DialogoLibro(QDialog):
@@ -359,7 +349,7 @@ class PantallaCatalogo(Pantalla):
             return
         self.tabla_ejemplares.cargar([(e.codigo_barras, e.ubicacion, "") for e in ejemplares], datos=ejemplares)
         for fila, e in enumerate(ejemplares):
-            self.tabla_ejemplares.setCellWidget(fila, 2, _celda_insignia(e.estado, TIPO_ESTADO.get(e.estado, "info")))
+            self.tabla_ejemplares.setCellWidget(fila, 2, celda_insignia(e.estado, TIPO_ESTADO.get(e.estado, "info")))
         self.acciones_ejemplar.setEnabled(True)
 
     def _limpiar_ejemplares(self):

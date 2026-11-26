@@ -9,6 +9,7 @@ from typing import List, Optional
 from Modelos import (
     Alumno,
     AlumnoConVencidos,
+    AlumnoListado,
     Carrera,
     Categoria,
     Disponibilidad,
@@ -275,6 +276,19 @@ class DAO:
         carrera.id_carrera = self._ejecutar(
             "INSERT INTO CARRERAS (nombre) VALUES (%s)", (carrera.nombre,))
         return carrera.id_carrera
+
+    def listar_alumnos(self) -> List[AlumnoListado]:
+        """Alumnos con su carrera y cuántos préstamos tienen activos y vencidos (subconsultas)."""
+        filas = self._consultar(
+            "SELECT A.id_alumno, A.matricula, A.nombre_completo, A.id_carrera, C.nombre AS carrera, "
+            "A.semestre, A.correo, A.telefono, A.estado, "
+            "(SELECT COUNT(*) FROM PRESTAMOS P WHERE P.id_alumno = A.id_alumno "
+            " AND P.estado = 'ACTIVO') AS prestamos_activos, "
+            "(SELECT COUNT(*) FROM PRESTAMOS P WHERE P.id_alumno = A.id_alumno "
+            " AND P.estado = 'ACTIVO' AND P.fecha_limite < CURDATE()) AS prestamos_vencidos "
+            "FROM ALUMNOS A JOIN CARRERAS C ON C.id_carrera = A.id_carrera "
+            "ORDER BY A.nombre_completo")
+        return [AlumnoListado(**f) for f in filas]
 
     def buscar_alumno(self, matricula: str) -> Optional[Alumno]:
         f = self._consultar_uno(

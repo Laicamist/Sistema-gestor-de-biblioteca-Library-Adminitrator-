@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from config import ALUMNOS, ADMINISTRACION
-from Modelos import Alumno, Carrera, AlumnoNoEncontradoError, DatosInvalidosError
+from Modelos import Alumno, AlumnoListado, Carrera, AlumnoNoEncontradoError, DatosInvalidosError
 from Logic.servicio_base import ServicioBase
 
 # Tamaños de las columnas en la base de datos
@@ -28,6 +28,10 @@ class AlumnoServicio(ServicioBase):
         return carrera
 
     #Alumnos
+
+    def listar(self) -> List[AlumnoListado]:
+        self._exigir(ALUMNOS)
+        return self._dao().listar_alumnos()
 
     def buscar(self, matricula: str) -> Alumno:
         self._exigir(ALUMNOS)

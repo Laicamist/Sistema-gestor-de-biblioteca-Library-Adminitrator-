@@ -10,7 +10,7 @@ from config import ALUMNOS, CATALOGO, CONSULTAR, DIAS_PRESTAMO, PRESTAMOS
 from Modelos import BibliotecaError, SinConexionError
 from UI import iconos, tema
 from UI.componentes import (
-    Aviso, BotonIcono, EtiquetaIcono, Insignia, PanelVidrio, boton_gel, etiqueta, repulir,
+    Aviso, BotonIcono, Dato, EtiquetaIcono, Insignia, PanelVidrio, boton_gel, etiqueta, fecha_texto, repulir,
 )
 from UI.pantallas.base import Pantalla
 
@@ -29,30 +29,6 @@ def _sin_prefijo(mensaje: str) -> str:
     """Los procedimientos regresan 'ERROR: ...'; en pantalla basta con el mensaje."""
     texto = str(mensaje)
     return texto[6:].strip() if texto.upper().startswith("ERROR:") else texto
-
-
-def _fecha(valor) -> str:
-    return f"{valor:%d/%m/%Y}" if valor else "—"
-
-
-class Dato(QFrame):
-    """Recuadro pequeño con un título tenue y un valor (ISBN, ubicación...)."""
-
-    def __init__(self, titulo: str, parent=None):
-        super().__init__(parent)
-        self.setObjectName("suave")
-        caja = QVBoxLayout(self)
-        caja.setContentsMargins(14, 10, 14, 10)
-        caja.setSpacing(2)
-        rotulo = etiqueta(titulo, tenue=True)
-        rotulo.setStyleSheet("font-size: 12px; font-weight: 600;")
-        self.valor = etiqueta("—", ajustar=True)
-        self.valor.setStyleSheet("font-size: 15px; font-weight: 600;")
-        caja.addWidget(rotulo)
-        caja.addWidget(self.valor)
-
-    def poner(self, texto):
-        self.valor.setText("—" if texto in (None, "") else str(texto))
 
 
 class FichaEjemplar(QWidget):
@@ -400,7 +376,7 @@ class PantallaLector(Pantalla):
                 texto, tipo = f"Prestado a {e.prestado_a} ({e.matricula_alumno}) · venció hace {atraso} días", "error"
             else:
                 texto, tipo = (f"Prestado a {e.prestado_a} ({e.matricula_alumno}) · "
-                               f"se devuelve a más tardar el {_fecha(e.fecha_limite)}"), "advertencia"
+                               f"se devuelve a más tardar el {fecha_texto(e.fecha_limite)}"), "advertencia"
             self.prestado_a.mostrar(texto, tipo, 0)
         else:
             self.prestado_a.ocultar()
@@ -493,7 +469,7 @@ class PantallaLector(Pantalla):
         if ok:
             limite = date.today() + timedelta(days=DIAS_PRESTAMO)
             nombre = self._alumno.nombre_completo if self._alumno else matricula
-            self.resultado.mostrar(f"{_sin_prefijo(mensaje)} · se devuelve a más tardar el {_fecha(limite)}",
+            self.resultado.mostrar(f"{_sin_prefijo(mensaje)} · se devuelve a más tardar el {fecha_texto(limite)}",
                                    "ok", 0)
             self.ventana.sonidos.reproducir("exito")
             self._agregar_lectura("ok", "Préstamo", f"{codigo} · {self._ejemplar.titulo} · {nombre}")

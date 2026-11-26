@@ -12,6 +12,7 @@ from Logic.sesion_servicio import SesionServicio
 from Logic.prestamo_servicio import PrestamoServicio
 from Logic.catalogo_servicio import CatalogoServicio
 from Logic.reporte_servicio import ReporteServicio
+from Logic.alumno_servicio import AlumnoServicio
 from Modelos import (
     AccesoDenegadoError, BibliotecaError, DatosInvalidosError, Ejemplar, LoginError, PrestamoError,
 )
@@ -43,6 +44,7 @@ def main():
     prestamos = PrestamoServicio(dao, sesiones)
     catalogo = CatalogoServicio(dao, sesiones)
     reportes = ReporteServicio(dao, sesiones)
+    alumnos = AlumnoServicio(dao, sesiones)
 
     # 2. Login (SP_LOGIN con OUT) y hash SHA-256
     revisar("Contraseña incorrecta", lambda: sesiones.iniciar_sesion("BCHAVEZ", "MALA"), LoginError)
@@ -108,6 +110,13 @@ def main():
             lambda: prestamos.prestar("7501000000012", "22120002"), AccesoDenegadoError)
     sesiones.cerrar_sesion()
     sesiones.iniciar_sesion("OALVAREZ", "BIBLIO123")
+    revisar("BIBLIOTECARIO lista alumnos con préstamos activos y vencidos",
+            lambda: [(a.matricula, a.prestamos_activos, a.prestamos_vencidos) for a in alumnos.listar()][:3])
+    revisar("Historial de ANA (SP_HISTORIAL_ALUMNO)",
+            lambda: f"{len(prestamos.historial('22120001'))} préstamos")
+    revisar("BIBLIOTECARIO guarda un libro sin cambios",
+            lambda: (lambda l: catalogo.actualizar_libro(l.id_libro, l.isbn, l.titulo, l.autor, l.id_categoria,
+                                                         l.editorial, l.anio).titulo)(catalogo.listar_libros()[0]))
     revisar("BIBLIOTECARIO no puede insertar préstamos sin el SP",
             lambda: dao._ejecutar("INSERT INTO PRESTAMOS (ID_EJEMPLAR, ID_ALUMNO, ID_USUARIO, "
                                   "FECHA_PRESTAMO, FECHA_LIMITE) VALUES (2, 2, 2, CURDATE(), CURDATE())"),

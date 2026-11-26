@@ -7,7 +7,8 @@ from PySide6.QtCore import QEasingCurve, QObject, QPointF, QPropertyAnimation, Q
 from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QRadialGradient
 from PySide6.QtWidgets import (
     QAbstractItemView, QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout,
-    QHeaderView, QLabel, QMessageBox, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem, QWidget,
+    QHeaderView, QLabel, QMessageBox, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem, QVBoxLayout,
+    QWidget,
 )
 
 from UI import iconos, tema
@@ -108,8 +109,11 @@ class BotonIcono(QPushButton):
         self._al_cambiar_tema(tema.gestor.actual)
         tema.gestor.cambiado.connect(self._al_cambiar_tema)
 
-    def cambiar_icono(self, icono: str):
+    def cambiar_icono(self, icono: str, token: str = None):
+        """Cambia el ícono y, si se indica, el color del tema con que se dibuja."""
         self._icono = icono
+        if token is not None and self.objectName() != "gel":
+            self._token = token
         self._al_cambiar_tema(tema.gestor.actual)
 
     def _al_cambiar_tema(self, _nombre):
@@ -177,6 +181,41 @@ class Insignia(QLabel):
 
 _ICONO_AVISO = {"ok": ("ok", "ok"), "error": ("error", "error"),
                 "advertencia": ("advertencia", "aviso"), "info": ("info", "acento")}
+
+
+def celda_insignia(texto: str, tipo: str) -> QWidget:
+    """Insignia de color para ponerla dentro de una celda de `Tabla` (setCellWidget)."""
+    celda = QWidget()
+    fila = QHBoxLayout(celda)
+    fila.setContentsMargins(6, 0, 6, 0)
+    fila.addWidget(Insignia(texto, tipo))
+    fila.addStretch(1)
+    return celda
+
+
+def fecha_texto(valor) -> str:
+    """Fecha como dd/mm/aaaa, o un guion si no hay."""
+    return f"{valor:%d/%m/%Y}" if valor else "—"
+
+
+class Dato(QFrame):
+    """Recuadro pequeño con un título tenue y un valor (ISBN, ubicación, correo...)."""
+
+    def __init__(self, titulo: str, parent=None):
+        super().__init__(parent)
+        self.setObjectName("suave")
+        caja = QVBoxLayout(self)
+        caja.setContentsMargins(14, 10, 14, 10)
+        caja.setSpacing(2)
+        rotulo = etiqueta(titulo, tenue=True)
+        rotulo.setStyleSheet("font-size: 12px; font-weight: 600;")
+        self.valor = etiqueta("—", ajustar=True)
+        self.valor.setStyleSheet("font-size: 15px; font-weight: 600;")
+        caja.addWidget(rotulo)
+        caja.addWidget(self.valor)
+
+    def poner(self, texto):
+        self.valor.setText("—" if texto in (None, "") else str(texto))
 
 
 class Aviso(QFrame):

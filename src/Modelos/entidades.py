@@ -239,3 +239,19 @@ class ResumenBiblioteca:
     de_baja: int
     alumnos_activos: int
     total_alumnos: int
+
+
+@dataclass
+class AlumnoListado:
+    """Lista de la pantalla de alumnos: el alumno, el nombre de su carrera y sus préstamos."""
+    id_alumno: int
+    matricula: str
+    nombre_completo: str
+    id_carrera: int
+    carrera: str
+    semestre: int
+    correo: Optional[str]
+    telefono: Optional[str]
+    estado: str
+    prestamos_activos: int = 0
+    prestamos_vencidos: int = 0

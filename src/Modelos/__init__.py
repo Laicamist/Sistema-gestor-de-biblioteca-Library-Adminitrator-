@@ -10,6 +10,7 @@ from .entidades import (
     Usuario,
     Carrera,
     Alumno,
+    AlumnoListado,
     Categoria,
     Libro,
     Ejemplar,
