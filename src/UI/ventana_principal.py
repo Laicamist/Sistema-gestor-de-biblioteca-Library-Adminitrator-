@@ -11,11 +11,13 @@ from UI.componentes import (
     Aviso, BotonIcono, FondoAero, LogoGel, PanelVidrio, Sonidos, etiqueta, fundido,
 )
 from UI.pantallas.alumnos import PantallaAlumnos
+from UI.pantallas.auditoria import PantallaAuditoria
 from UI.pantallas.catalogo import PantallaCatalogo
 from UI.pantallas.inicio import PantallaInicio
 from UI.pantallas.lector import PantallaLector
 from UI.pantallas.login import PantallaLogin
 from UI.pantallas.pendiente import PantallaPendiente
+from UI.pantallas.reportes import PantallaReportes
 
 
 @dataclass(frozen=True)
@@ -48,6 +50,8 @@ PANTALLAS = {
     "lector": PantallaLector,
     "catalogo": PantallaCatalogo,
     "alumnos": PantallaAlumnos,
+    "reportes": PantallaReportes,
+    "auditoria": PantallaAuditoria,
 }
 
 

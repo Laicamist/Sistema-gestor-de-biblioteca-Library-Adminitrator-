@@ -134,7 +134,7 @@ class PantallaInicio(Pantalla):
         cabecera.addWidget(etiqueta("Préstamos vencidos", "seccion"))
         cabecera.addStretch(1)
         ver = BotonIcono("Ver reporte", None, "enlace")
-        ver.clicked.connect(lambda: self.ventana.mostrar("reportes"))
+        ver.clicked.connect(lambda: self.ventana.mostrar("reportes", reporte="vencidos"))
         cabecera.addWidget(ver)
         caja.addLayout(cabecera)
         self.tabla_vencidos = Tabla(["Alumno", "Libro", "Código", "Retraso"])

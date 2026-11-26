@@ -3,10 +3,12 @@
 Todas reaccionan al cambio de tema: se conectan a `tema.gestor.cambiado` con un
 método propio, así Qt desconecta la señal solo cuando el widget se destruye.
 """
+import csv
+
 from PySide6.QtCore import QEasingCurve, QObject, QPointF, QPropertyAnimation, QSettings, QSize, QTimer, QUrl, Qt
 from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QRadialGradient
 from PySide6.QtWidgets import (
-    QAbstractItemView, QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout,
+    QAbstractItemView, QFileDialog, QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout,
     QHeaderView, QLabel, QMessageBox, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem, QVBoxLayout,
     QWidget,
 )
@@ -191,6 +193,21 @@ def celda_insignia(texto: str, tipo: str) -> QWidget:
     fila.addWidget(Insignia(texto, tipo))
     fila.addStretch(1)
     return celda
+
+
+def exportar_csv(padre: QWidget, nombre_sugerido: str, columnas: list, filas: list):
+    """Pide dónde guardar y escribe un CSV que Excel abre con acentos (UTF-8 con BOM).
+    Regresa la ruta guardada, o None si el usuario canceló."""
+    ruta, _ = QFileDialog.getSaveFileName(padre, "Exportar a CSV", nombre_sugerido, "Archivo CSV (*.csv)")
+    if not ruta:
+        return None
+    if not ruta.lower().endswith(".csv"):
+        ruta += ".csv"
+    with open(ruta, "w", newline="", encoding="utf-8-sig") as archivo:
+        escritor = csv.writer(archivo)
+        escritor.writerow(columnas)
+        escritor.writerows([["" if v is None else v for v in fila] for fila in filas])
+    return ruta
 
 
 def fecha_texto(valor) -> str:
