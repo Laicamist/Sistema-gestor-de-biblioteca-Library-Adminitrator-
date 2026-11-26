@@ -122,4 +122,4 @@ La aplicación está en capas: las pantallas llaman a los **servicios** (`Logic/
 | Brayan Yafeth Chávez Reyes | [YafethReyes](https://github.com/YafethReyes) |
 | _por completar_ | [monkiekingnum2fan](https://github.com/monkiekingnum2fan) |
 
-Taller de Bases de Datos · Ingeniería en Software · ITSUR, 2026.
+Taller de Bases de Datos · Ingeniería en Software · 2026.
