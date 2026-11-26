@@ -233,8 +233,38 @@ class DAO:
              libro.id_categoria, libro.id_libro))
 
     def eliminar_libro(self, id_libro: int) -> int:
-        """Lo registra TRG_AUD_LIBROS_AD. Falla si el libro tiene ejemplares (FK)."""
-        return self._ejecutar("DELETE FROM LIBROS WHERE id_libro = %s", (id_libro,))
+        """Borra sus copias dadas de BAJA y el libro en una sola transacción: si algo falla,
+        ROLLBACK y no se borra nada. Si queda una copia que no está en BAJA, la llave foránea
+        de LIBROS lo rechaza; una copia con préstamos, la de PRESTAMOS; TRG_VAL_EJEMPLARES_BD
+        no deja borrar copias fuera de BAJA. Lo registran TRG_AUD_EJEMPLARES_AD y TRG_AUD_LIBROS_AD.
+        Regresa cuántos libros se borraron (0 si no existía)."""
+        cur = self.conn.cursor()
+        try:
+            self.conn.start_transaction()
+            cur.execute("DELETE FROM EJEMPLARES WHERE id_libro = %s AND estado = 'BAJA'", (id_libro,))
+            cur.execute("DELETE FROM LIBROS WHERE id_libro = %s", (id_libro,))
+            borrados = cur.rowcount
+            self.conn.commit()
+            return borrados
+        except Error as e:
+            try:
+                self.conn.rollback()
+            except Error:
+                pass   # si se perdió la conexión, MySQL descarta la transacción solo
+            traducido = self._traducir(e)
+            if traducido:
+                raise traducido from e
+            raise
+        finally:
+            cur.close()
+
+    def contar_prestamos_libro(self, id_libro: int) -> int:
+        """Préstamos (activos o devueltos) de todas las copias de un libro."""
+        f = self._consultar_uno(
+            "SELECT COUNT(*) AS total FROM PRESTAMOS P "
+            "JOIN EJEMPLARES E ON E.id_ejemplar = P.id_ejemplar WHERE E.id_libro = %s",
+            (id_libro,))
+        return f["total"] if f else 0
 
     def listar_ejemplares(self, id_libro: int) -> List[Ejemplar]:
         filas = self._consultar(

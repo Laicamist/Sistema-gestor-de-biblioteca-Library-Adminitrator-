@@ -53,6 +53,7 @@ Para cada requisito de la guía del proyecto: qué objeto de la base o qué part
 | Concurrencia | `SELECT ... FOR UPDATE` bloquea la fila del ejemplar durante la transacción. |
 | Uso desde la app | Lector → Prestar / Devolver → `PrestamoServicio.prestar` / `devolver` → `DAO.registrar_prestamo` / `registrar_devolucion`. |
 | Cómo demostrar el ROLLBACK | Prestar `7501000000072` a la matrícula `22120001` (ANA ya tiene 3): el trigger lanza el error, la transacción se cancela y el ejemplar sigue DISPONIBLE. |
+| Transacción desde Python | Eliminar libro (`DAO.eliminar_libro`): `start_transaction`, borra sus copias en BAJA y el libro, y `commit`; si una llave foránea o un trigger lo rechaza, `rollback` y no se borra nada. |
 
 ## E. Procedimientos almacenados (7)
 
@@ -76,23 +77,24 @@ Se cumplen los tres requisitos: con parámetros de entrada (todos), con parámet
 | `FN_DISPONIBLES_LIBRO(id_libro)` | Copias disponibles de un libro | Vista `V_DISPONIBILIDAD`; procedimientos `SP_CONSULTAR_EJEMPLAR` y `SP_DISPONIBILIDAD_LIBRO` |
 | `FN_EJEMPLAR_DISPONIBLE(código)` | 1 si la copia está disponible, 0 si no | `SP_CONSULTAR_EJEMPLAR` (la ficha del lector se pinta en verde o rojo) |
 
-## G. Triggers de validación (4)
+## G. Triggers de validación (5)
 
 | Trigger | Cuándo | Qué impide |
 | --- | --- | --- |
 | `TRG_VAL_EJEMPLARES_BI` | BEFORE INSERT en EJEMPLARES | Código de barras vacío o nulo |
 | `TRG_VAL_EJEMPLARES_BU` | BEFORE UPDATE en EJEMPLARES | Dejar vacío el código de barras |
+| `TRG_VAL_EJEMPLARES_BD` | BEFORE DELETE en EJEMPLARES | Borrar una copia que no está en BAJA (solo se borran al eliminar su libro) |
 | `TRG_VAL_PRESTAMOS_BI` | BEFORE INSERT en PRESTAMOS | Prestar un ejemplar que no está DISPONIBLE, a un alumno INACTIVO o con 3 préstamos activos |
 | `TRG_VAL_PRESTAMOS_BU` | BEFORE UPDATE en PRESTAMOS | Modificar un préstamo ya devuelto o poner una devolución anterior al préstamo |
 
 Todos usan `SIGNAL SQLSTATE '45000'`. El DAO convierte el error 1644 en un error de negocio con el mensaje del trigger, y la app lo muestra en un aviso rojo. En los préstamos, el procedimiento atrapa ese error, hace `ROLLBACK` y regresa el mensaje en su parámetro OUT (`ERROR: ...`).
 
-## H. Triggers de auditoría (8) y tabla AUDITORIA
+## H. Triggers de auditoría (9) y tabla AUDITORIA
 
 | Requisito | Dónde se cumple |
 | --- | --- |
 | Tabla con id, tabla, operación, fecha y hora, usuario, datos anteriores y nuevos | AUDITORIA: `ID_MOVIMIENTO`, `TABLA_AFECTADA`, `TIPO_OPERACION`, `FECHA_HORA`, `USUARIO_RESPONSABLE`, `DATOS_ANTERIORES` (JSON), `DATOS_NUEVOS` (JSON). |
-| Triggers | `TRG_AUD_EJEMPLARES_AI` y `_AU`, `TRG_AUD_PRESTAMOS_AI` y `_AU`, `TRG_AUD_LIBROS_AD`, `TRG_AUD_ALUMNOS_AU`, `TRG_AUD_USUARIOS_AI` y `_AU`. Cubren INSERT, UPDATE y DELETE. |
+| Triggers | `TRG_AUD_EJEMPLARES_AI`, `_AU` y `_AD`, `TRG_AUD_PRESTAMOS_AI` y `_AU`, `TRG_AUD_LIBROS_AD`, `TRG_AUD_ALUMNOS_AU`, `TRG_AUD_USUARIOS_AI` y `_AU`. Cubren INSERT, UPDATE y DELETE. |
 | Usuario responsable | Después del login la app ejecuta `SET @USUARIO_APP = '<usuario>'` (`DAO.establecer_usuario_app`). Los triggers usan `COALESCE(@USUARIO_APP, USER())`, así que un cambio hecho fuera de la app también queda con el usuario de MySQL. |
 | Ejemplo de la guía (ubicación anterior y nueva) | Catálogo → Cambiar ubicación → `SP_CAMBIAR_UBICACION` → `TRG_AUD_EJEMPLARES_AU` guarda la ubicación anterior y la nueva. |
 | Dónde se ve | Pantalla Auditoría (solo administrador), con detalle antes/después. La bitácora es de solo lectura incluso para `BIB_ADMIN`. |
@@ -122,7 +124,7 @@ Se usan las 8 características de la lista (la guía pide al menos 3). Los repor
 | Visualización de los reportes | Reportes e Inicio |
 | Mensajes de error y confirmación | Avisos verde, rojo, ámbar e informativo en cada pantalla; ventana de confirmación para eliminar, dar de baja, desactivar y cambiar rol; tonos del lector |
 | Restricciones de acceso según el rol | Sección C (aplicación + MySQL) |
-| Operaciones reales, no simuladas | Todo pasa por MySQL; `pruebas_bd.py` lo comprueba contra la base real (35 casos) |
+| Operaciones reales, no simuladas | Todo pasa por MySQL; `pruebas_bd.py` lo comprueba contra la base real (39 casos) |
 
 ## Usuarios de prueba
 

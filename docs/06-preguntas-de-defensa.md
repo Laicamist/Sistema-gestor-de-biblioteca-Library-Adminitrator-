@@ -95,6 +95,7 @@ Ninguna es un script suelto: todas se usan en objetos que llama la app.
 - `TRG_VAL_PRESTAMOS_BI`: que el ejemplar esté disponible, que el alumno esté activo y que no tenga ya 3 préstamos.
 - `TRG_VAL_PRESTAMOS_BU`: que no se modifique un préstamo devuelto ni se ponga una devolución anterior al préstamo.
 - `TRG_VAL_EJEMPLARES_BI/BU`: que el código no quede vacío.
+- `TRG_VAL_EJEMPLARES_BD`: que solo se borren copias dadas de BAJA (pasa al eliminar su libro).
 
 Avisan con `SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = '...'`, y la app muestra ese mensaje.
 
@@ -107,11 +108,11 @@ Por la variable de sesión `@USUARIO_APP`, que la app asigna después del login 
 **27. ¿Qué cambios se auditan?**
 - Altas y cambios de ejemplares (estado y ubicación).
 - Préstamos y devoluciones.
-- Eliminación de libros.
+- Eliminación de libros y de sus copias dadas de BAJA.
 - Cambios de alumnos.
 - Altas y cambios de usuarios, sin guardar el hash, solo si cambió la contraseña.
 
-Ocho triggers en total.
+Nueve triggers en total.
 
 ## Reportes y aplicación
 
@@ -141,7 +142,7 @@ En capas:
 - **Modelos** (`Modelos`), con dataclasses para tablas y resultados.
 
 **31. ¿Cómo comprobaron que todo funciona contra la base real?**
-Con `src/pruebas_bd.py`: 35 casos contra MySQL. Revisa la conexión de cada perfil, el login, el préstamo y la devolución, cada trigger, la auditoría con el usuario de la app, los reportes y que MySQL rechace las operaciones sin permiso.
+Con `src/pruebas_bd.py`: 39 casos contra MySQL. Revisa la conexión de cada perfil, el login, el préstamo y la devolución, cada trigger, la auditoría con el usuario de la app, los reportes y que MySQL rechace las operaciones sin permiso.
 
 **32. ¿Qué mejorarían con más tiempo?**
 - bcrypt o Argon2id para las contraseñas.

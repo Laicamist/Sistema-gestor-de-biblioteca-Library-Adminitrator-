@@ -225,10 +225,10 @@ Notación: `PK` = llave primaria, `FK →` = llave foránea (tabla a la que apun
 | Tipo | Dónde | Qué evita |
 | --- | --- | --- |
 | Llave primaria | Las 9 tablas (`AUTO_INCREMENT`) | Filas repetidas o sin identificar. |
-| Llave foránea | USUARIOS, ALUMNOS, LIBROS, EJEMPLARES, PRESTAMOS | Referencias a registros que no existen; borrar un libro que tiene copias o una carrera con alumnos. |
+| Llave foránea | USUARIOS, ALUMNOS, LIBROS, EJEMPLARES, PRESTAMOS | Referencias a registros que no existen; borrar un libro con copias en uso, una copia con préstamos en el historial o una carrera con alumnos. |
 | UNIQUE | `CODIGO_BARRAS`, `ISBN`, `MATRICULA`, `NOMBRE_USUARIO` y los nombres de rol, carrera y categoría | Códigos de barras duplicados (requisito del lector) y otros datos repetidos. |
 | CHECK | `SEMESTRE` 1–12, `ANIO` > 0, `FECHA_LIMITE` ≥ `FECHA_PRESTAMO`, `CODIGO_BARRAS` no vacío | Valores fuera de rango. |
 | ENUM + DEFAULT | Estados de usuarios, alumnos, ejemplares, préstamos y auditoría | Estados inventados. |
 | NOT NULL | Datos obligatorios | Registros incompletos. |
-| Triggers de validación | `TRG_VAL_EJEMPLARES_BI/BU`, `TRG_VAL_PRESTAMOS_BI/BU` | Código vacío, prestar un ejemplar no disponible, prestar a un alumno inactivo o con 3 préstamos, modificar un préstamo ya devuelto, devolución con fecha anterior al préstamo. |
-| Transacciones | `SP_REGISTRAR_PRESTAMO`, `SP_REGISTRAR_DEVOLUCION` | Que el préstamo quede guardado sin cambiar el estado del ejemplar, o al revés. |
+| Triggers de validación | `TRG_VAL_EJEMPLARES_BI/BU/BD`, `TRG_VAL_PRESTAMOS_BI/BU` | Código vacío, borrar una copia que no está en BAJA, prestar un ejemplar no disponible, prestar a un alumno inactivo o con 3 préstamos, modificar un préstamo ya devuelto, devolución con fecha anterior al préstamo. |
+| Transacciones | `SP_REGISTRAR_PRESTAMO`, `SP_REGISTRAR_DEVOLUCION`; eliminar libro en `DAO.eliminar_libro` | Que el préstamo quede guardado sin cambiar el estado del ejemplar, o al revés; que se borren las copias de un libro y el libro no. |

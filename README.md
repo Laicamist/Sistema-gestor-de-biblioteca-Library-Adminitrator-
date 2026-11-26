@@ -39,7 +39,7 @@ Las restricciones por rol se aplican **dos veces**: en la aplicación (cada serv
    ```bash
    python src/main.py
    ```
-5. **Prueba del backend (opcional).** `python src/pruebas_bd.py` revisa la base real sin interfaz: login, transacciones, triggers, auditoría, reportes y permisos de MySQL. Debe terminar con **35 de 35 pruebas correctas**. Deja movimientos en la base, así que después vuelve a ejecutar `Biblioteca.sql`.
+5. **Prueba del backend (opcional).** `python src/pruebas_bd.py` revisa la base real sin interfaz: login, transacciones, triggers, auditoría, reportes y permisos de MySQL. Debe terminar con **39 de 39 pruebas correctas**. Deja movimientos en la base, así que después vuelve a ejecutar `Biblioteca.sql`.
 
 ## Usuarios de prueba
 
@@ -88,8 +88,8 @@ También hay apoyo para la presentación:
 | Tablas (9) | `ROLES`, `USUARIOS`, `CARRERAS`, `ALUMNOS`, `CATEGORIAS`, `LIBROS`, `EJEMPLARES`, `PRESTAMOS`, `AUDITORIA` |
 | Funciones (3) | `FN_DIAS_RETRASO`, `FN_DISPONIBLES_LIBRO`, `FN_EJEMPLAR_DISPONIBLE` |
 | Procedimientos (7) | `SP_LOGIN`, `SP_CONSULTAR_EJEMPLAR`, `SP_REGISTRAR_PRESTAMO`, `SP_REGISTRAR_DEVOLUCION`, `SP_DISPONIBILIDAD_LIBRO`, `SP_CAMBIAR_UBICACION`, `SP_HISTORIAL_ALUMNO` |
-| Triggers de validación (4) | `TRG_VAL_EJEMPLARES_BI`, `TRG_VAL_EJEMPLARES_BU`, `TRG_VAL_PRESTAMOS_BI`, `TRG_VAL_PRESTAMOS_BU` |
-| Triggers de auditoría (8) | `TRG_AUD_EJEMPLARES_AI`, `TRG_AUD_EJEMPLARES_AU`, `TRG_AUD_PRESTAMOS_AI`, `TRG_AUD_PRESTAMOS_AU`, `TRG_AUD_LIBROS_AD`, `TRG_AUD_ALUMNOS_AU`, `TRG_AUD_USUARIOS_AI`, `TRG_AUD_USUARIOS_AU` |
+| Triggers de validación (5) | `TRG_VAL_EJEMPLARES_BI`, `TRG_VAL_EJEMPLARES_BU`, `TRG_VAL_EJEMPLARES_BD`, `TRG_VAL_PRESTAMOS_BI`, `TRG_VAL_PRESTAMOS_BU` |
+| Triggers de auditoría (9) | `TRG_AUD_EJEMPLARES_AI`, `TRG_AUD_EJEMPLARES_AU`, `TRG_AUD_EJEMPLARES_AD`, `TRG_AUD_PRESTAMOS_AI`, `TRG_AUD_PRESTAMOS_AU`, `TRG_AUD_LIBROS_AD`, `TRG_AUD_ALUMNOS_AU`, `TRG_AUD_USUARIOS_AI`, `TRG_AUD_USUARIOS_AU` |
 | Vistas (6) | `V_PRESTAMOS_VENCIDOS`, `V_ALUMNOS_CON_VENCIDOS`, `V_LIBROS_MAS_SOLICITADOS`, `V_LIBROS_SIN_PRESTAMOS`, `V_DISPONIBILIDAD`, `V_RESUMEN` |
 
 ## Estructura del código
@@ -102,7 +102,7 @@ docs/                           Documentos de entrega y etiquetas para imprimir
 src/
   main.py                       Punto de entrada: crea el DAO, los servicios y abre la interfaz
   config.py                     Permisos por rol, días de préstamo y otras constantes
-  pruebas_bd.py                 Prueba de humo del backend contra MySQL (35 casos)
+  pruebas_bd.py                 Prueba de humo del backend contra MySQL (39 casos)
   ConexionSQL/                  Conexión por perfil (usuario de MySQL por rol) y DAO
   Logic/                        Servicios con las reglas de negocio y la revisión de permisos
     Sql_Schema/                 Scripts SQL por partes y el generador del consolidado

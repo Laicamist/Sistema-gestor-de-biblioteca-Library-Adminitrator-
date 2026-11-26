@@ -89,15 +89,31 @@ class CatalogoServicio(ServicioBase):
             anio=anio,
         )
 
-    def eliminar_libro(self, id_libro: int) -> None:
-        """Solo administrador. La base no deja borrar un libro que tenga ejemplares;
-        para retirar copias se usa el estado BAJA."""
+    def eliminar_libro(self, id_libro: int) -> int:
+        """Solo administrador. Se puede eliminar un libro sin ejemplares o con todas sus
+        copias dadas de BAJA; esas copias se borran junto con él. No se elimina si una copia
+        sigue en uso o si sus copias tienen préstamos: el historial alimenta los reportes
+        y el historial de los alumnos. Regresa cuántas copias en BAJA se borraron."""
         self._exigir(ADMINISTRACION)
-        if self._dao().listar_ejemplares(id_libro):
+        id_libro = self._entero(id_libro, "el libro", 1)
+        ejemplares = self._dao().listar_ejemplares(id_libro)
+        en_uso = [e for e in ejemplares if e.estado != "BAJA"]
+        if en_uso:
+            codigos = ", ".join(f"{e.codigo_barras} ({e.estado})" for e in en_uso[:3])
+            if len(en_uso) > 3:
+                codigos += f" y {len(en_uso) - 3} más"
             raise DatosInvalidosError(
-                "El libro tiene ejemplares registrados; dalos de BAJA en lugar de eliminarlo.")
+                f"El libro aún tiene {len(en_uso)} copia(s) sin dar de BAJA: {codigos}. "
+                "Dalas de BAJA para poder eliminarlo (una prestada primero se devuelve).")
+        prestamos = self._dao().contar_prestamos_libro(id_libro)
+        if prestamos:
+            raise DatosInvalidosError(
+                f"No se puede eliminar: sus copias tienen {prestamos} préstamo(s) en el historial, "
+                "que se perderían de los reportes y del historial de los alumnos. "
+                "Con todas sus copias en BAJA ya no se puede prestar.")
         if self._dao().eliminar_libro(id_libro) == 0:
             raise DatosInvalidosError("Ese libro no existe.")
+        return len(ejemplares)
 
     #Ejemplares
 

@@ -26,7 +26,7 @@ Roles: **ADM** = administrador, **BIB** = bibliotecario, **CON** = consulta. Los
 | ID | Requerimiento | Roles | Cómo se cumple |
 | --- | --- | --- | --- |
 | RF-11 | Registrar y editar libros (ISBN único, título, autor, editorial, año, categoría). | ADM, BIB | Catálogo → formulario de libro. |
-| RF-12 | Eliminar un libro solo si no tiene ejemplares. | ADM | Catálogo → Eliminar (llave foránea + validación); queda en auditoría (`TRG_AUD_LIBROS_AD`). |
+| RF-12 | Eliminar un libro sin ejemplares o con todas sus copias dadas de BAJA (se borran con él), siempre que sus copias no tengan préstamos en el historial. | ADM | Catálogo → Eliminar: validación en Python, transacción en el DAO, llaves foráneas y `TRG_VAL_EJEMPLARES_BD`; queda en auditoría (`TRG_AUD_EJEMPLARES_AD`, `TRG_AUD_LIBROS_AD`). |
 | RF-13 | Crear categorías. | ADM | Formulario de libro → "Nueva categoría". |
 | RF-14 | Ver las copias de un libro y cuántas están disponibles. | ADM, BIB | Panel de ejemplares → `SP_DISPONIBILIDAD_LIBRO` (OUT). |
 | RF-15 | Cambiar la ubicación de un ejemplar, registrando la anterior y la nueva. | ADM, BIB | `SP_CAMBIAR_UBICACION` + `TRG_AUD_EJEMPLARES_AU`. |
@@ -76,4 +76,4 @@ Roles: **ADM** = administrador, **BIB** = bibliotecario, **CON** = consulta. Los
 | RNF-10 | Mantenibilidad | Código en capas (interfaz, servicios, acceso a datos y modelos); solo el DAO ejecuta SQL. Cada pantalla vive en su propio archivo. |
 | RNF-11 | Portabilidad | Funciona en Windows con Python 3.10 o superior y MySQL 8.0. La conexión se configura en un archivo `.env`, sin contraseñas escritas en el código. |
 | RNF-12 | Confiabilidad | Si MySQL no está disponible al abrir la aplicación, muestra el error y permite reintentar la conexión desde el login. Cualquier error de la base se muestra como aviso y nunca cierra la aplicación. |
-| RNF-13 | Verificabilidad | `src/pruebas_bd.py` comprueba contra la base real el login, las transacciones, los triggers, la auditoría, los reportes y los permisos de MySQL (35 casos). |
+| RNF-13 | Verificabilidad | `src/pruebas_bd.py` comprueba contra la base real el login, las transacciones, los triggers, la auditoría, los reportes y los permisos de MySQL (39 casos). |

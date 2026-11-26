@@ -33,6 +33,28 @@ def revisar(nombre, funcion, espera=None):
     print(f"[{'OK ' if ok else 'FALLA'}] {nombre} -> {detalle}")
 
 
+def sin_guardar(dao, funcion):
+    """Ejecuta dentro de una transacción que siempre se deshace: la base no cambia."""
+    dao.conn.start_transaction()
+    try:
+        return funcion()
+    finally:
+        dao.conn.rollback()
+
+
+def eliminar_libro_de_prueba(catalogo, reportes):
+    """Da de alta un libro con una copia, la da de BAJA y elimina el libro.
+    La auditoría debe guardar el borrado de la copia y el del libro."""
+    libro = catalogo.registrar_libro("PRUEBA-ELIMINAR", "LIBRO DE PRUEBA", "PRUEBAS", 1)
+    catalogo.registrar_ejemplar("PRUEBA-BAJA-01", libro.id_libro, "PASILLO Z")
+    catalogo.cambiar_estado_ejemplar("PRUEBA-BAJA-01", "BAJA")
+    copias = catalogo.eliminar_libro(libro.id_libro)
+    movimientos = [(a.tabla_afectada, a.tipo_operacion) for a in reportes.auditoria(3)]
+    if ("EJEMPLARES", "DELETE") not in movimientos or ("LIBROS", "DELETE") not in movimientos:
+        raise AssertionError(f"la auditoría no registró los borrados: {movimientos}")
+    return f"{copias} copia en BAJA borrada con el libro; auditoría: {movimientos[:2]}"
+
+
 def main():
     # 1. Conexión con cada usuario de MySQL
     for perfil in ("LOGIN", "ADMINISTRADOR", "BIBLIOTECARIO", "CONSULTA"):
@@ -125,6 +147,21 @@ def main():
     sesiones.iniciar_sesion("BCHAVEZ", "ADMIN123")
     revisar("ADMINISTRADOR no puede borrar la auditoría",
             lambda: dao._ejecutar("DELETE FROM AUDITORIA"), AccesoDenegadoError)
+
+    # 10. Eliminar libro: sus copias en BAJA se borran con él (transacción + auditoría)
+    revisar("No se elimina un libro con copias en uso (libro 1)",
+            lambda: catalogo.eliminar_libro(1), DatosInvalidosError)
+    revisar("No se elimina un libro con préstamos aunque sus copias estén en BAJA",
+            lambda: sin_guardar(dao, lambda: (
+                dao._ejecutar("UPDATE EJEMPLARES SET estado = 'BAJA' WHERE codigo_barras = '7501000000151'"),
+                catalogo.eliminar_libro(8))),
+            DatosInvalidosError)
+    revisar("Trigger: MySQL no borra un ejemplar que no está en BAJA",
+            lambda: sin_guardar(dao, lambda: dao._ejecutar(
+                "DELETE FROM EJEMPLARES WHERE codigo_barras = '7501000000051'")),
+            DatosInvalidosError)
+    revisar("Eliminar libro con todas sus copias en BAJA",
+            lambda: eliminar_libro_de_prueba(catalogo, reportes))
     sesiones.cerrar_sesion()
     revisar("El usuario de LOGIN no puede leer USUARIOS ni los hashes",
             lambda: dao._consultar("SELECT * FROM USUARIOS"), AccesoDenegadoError)

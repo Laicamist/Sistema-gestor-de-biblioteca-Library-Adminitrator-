@@ -385,12 +385,14 @@ class PantallaCatalogo(Pantalla):
             self.avisar("Selecciona el libro que quieres eliminar.", "info")
             return
         if not confirmar(self, "Eliminar libro",
-                         f"¿Eliminar «{libro.titulo}»?\n\nSolo se puede eliminar un libro sin ejemplares. "
+                         f"¿Eliminar «{libro.titulo}»?\n\nSus copias dadas de BAJA se borran con él. "
+                         "No se puede si alguna copia sigue en uso o si tiene préstamos en el historial. "
                          "El cambio queda registrado en la auditoría.", "Sí, eliminar"):
             return
-        ok, _ = self.ejecutar(self.servicios["catalogo"].eliminar_libro, libro.id_libro,
-                              exito=f"Libro eliminado: {libro.titulo}.")
+        ok, copias = self.ejecutar(self.servicios["catalogo"].eliminar_libro, libro.id_libro)
         if ok:
+            extra = f" y sus {copias} copia(s) dadas de BAJA" if copias else ""
+            self.avisar(f"Libro eliminado: {libro.titulo}{extra}.", "ok")
             self._id_seleccionado = None
             self._cargar()
 
