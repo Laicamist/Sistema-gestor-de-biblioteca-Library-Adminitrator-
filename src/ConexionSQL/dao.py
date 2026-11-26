@@ -21,6 +21,7 @@ from Modelos import (
     LibroSolicitado,
     PrestamoVencido,
     RegistroAuditoria,
+    ResumenBiblioteca,
     Rol,
     Sesion,
     Usuario,
@@ -344,6 +345,11 @@ class DAO:
     def libros_sin_prestamos(self) -> List[LibroSinPrestamos]:
         filas = self._consultar("SELECT * FROM V_LIBROS_SIN_PRESTAMOS ORDER BY titulo")
         return [LibroSinPrestamos(**f) for f in filas]
+
+    def resumen(self) -> ResumenBiblioteca:
+        fila = self._consultar_uno("SELECT * FROM V_RESUMEN") or {}
+        return ResumenBiblioteca(**{campo: int(fila.get(campo) or 0)
+                                    for campo in ResumenBiblioteca.__dataclass_fields__})
 
     def disponibilidad_general(self) -> List[DisponibilidadLibro]:
         filas = self._consultar("SELECT * FROM V_DISPONIBILIDAD ORDER BY titulo")

@@ -1,6 +1,6 @@
 from typing import List
 
-from config import REPORTES, ADMINISTRACION
+from config import CONSULTAR, REPORTES, ADMINISTRACION
 from Modelos import (
     AlumnoConVencidos,
     DisponibilidadLibro,
@@ -8,12 +8,18 @@ from Modelos import (
     LibroSolicitado,
     PrestamoVencido,
     RegistroAuditoria,
+    ResumenBiblioteca,
 )
 from Logic.servicio_base import ServicioBase
 
 
 class ReporteServicio(ServicioBase):
     """Los reportes que pide el proyecto, leídos de las vistas de la base."""
+
+    def resumen(self) -> ResumenBiblioteca:
+        """Contadores de la pantalla de inicio (vista V_RESUMEN). Todos los roles la ven."""
+        self._exigir(CONSULTAR)
+        return self._dao().resumen()
 
     def prestamos_vencidos(self) -> List[PrestamoVencido]:
         """Reporte 1: alumnos con préstamos vencidos (JOIN de 5 tablas + FN_DIAS_RETRASO)."""

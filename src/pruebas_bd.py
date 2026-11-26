@@ -90,6 +90,10 @@ def main():
     revisar("Reporte préstamos vencidos", lambda: f"{len(reportes.prestamos_vencidos())} filas")
     revisar("Reporte alumnos con vencidos (CTE)", lambda: f"{len(reportes.alumnos_con_vencidos())} filas")
     revisar("Reporte libros más solicitados", lambda: f"{len(reportes.libros_mas_solicitados())} filas")
+    revisar("Resumen de inicio (V_RESUMEN)",
+            lambda: (lambda r: f"{r.prestamos_activos} activos, {r.prestamos_vencidos} vencidos, "
+                               f"{r.ejemplares_disponibles}/{r.total_ejemplares} ejemplares disponibles")(
+                reportes.resumen()))
     revisar("Función en consulta: FN_DISPONIBLES_LIBRO(1)",
             lambda: dao._consultar_uno("SELECT FN_DISPONIBLES_LIBRO(1) AS d")["d"])
 
@@ -98,6 +102,8 @@ def main():
     sesiones.iniciar_sesion("IPEREZ", "CONS123")
     revisar("CONSULTA no puede leer USUARIOS en MySQL",
             lambda: dao._consultar("SELECT * FROM USUARIOS"), AccesoDenegadoError)
+    revisar("CONSULTA sí puede ver el resumen de inicio",
+            lambda: f"{reportes.resumen().prestamos_activos} préstamos activos")
     revisar("CONSULTA no puede registrar préstamos (app)",
             lambda: prestamos.prestar("7501000000012", "22120002"), AccesoDenegadoError)
     sesiones.cerrar_sesion()
