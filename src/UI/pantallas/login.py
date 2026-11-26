@@ -35,7 +35,7 @@ class PantallaLogin(QWidget):
         raiz.addLayout(centro)
         raiz.addStretch(1)
 
-        pie = etiqueta("ITSUR · Taller de Bases de Datos 2026", tenue=True)
+        pie = etiqueta("Taller de Bases de Datos", tenue=True)
         pie.setAlignment(Qt.AlignmentFlag.AlignCenter)
         raiz.addWidget(pie)
 
@@ -52,14 +52,15 @@ class PantallaLogin(QWidget):
         marca.addStretch(1)
         marca.addWidget(LogoGel(76))
         marca.addWidget(etiqueta("Library\nAdministrator", "tituloLogin"))
-        descripcion = etiqueta("Préstamos, devoluciones y catálogo de la biblioteca, "
-                               "operados con el lector de código de barras.", tenue=True, ajustar=True)
+        descripcion = etiqueta("Sistema de administración de la biblioteca, encuentra el libro que buscas facilmente, "
+                               "contamos con sistema de prestamos para continuar la magia de la lectura en casa", 
+                               tenue=True, ajustar=True)
         descripcion.setMaximumWidth(460)
         descripcion.setStyleSheet("font-size: 17px;")
         marca.addWidget(descripcion)
         chips = QHBoxLayout()
         chips.setSpacing(10)
-        for texto in ("Lector de código de barras", "Préstamos en tiempo real", "Auditoría de cambios"):
+        for texto in ("Funciones integrales:","Lector de código de barras", "Préstamos en tiempo real", "Auditoría de cambios"):
             chips.addWidget(etiqueta(texto, "chip"))
         chips.addStretch(1)
         marca.addLayout(chips)
@@ -79,7 +80,7 @@ class PantallaLogin(QWidget):
 
         caja.addWidget(etiqueta("Usuario"))
         self.usuario = QLineEdit()
-        self.usuario.setPlaceholderText("Por ejemplo, BCHAVEZ")
+        self.usuario.setPlaceholderText("Tu usuario")
         self.usuario.setMaxLength(30)
         self._accion_usuario = self.usuario.addAction(
             iconos.icono("usuario", tema.color("tenue")), QLineEdit.ActionPosition.LeadingPosition)
@@ -111,12 +112,6 @@ class PantallaLogin(QWidget):
         self.boton_reintentar.clicked.connect(self._reintentar)
         self.boton_reintentar.hide()
         caja.addWidget(self.boton_reintentar, 0, Qt.AlignmentFlag.AlignHCenter)
-
-        nota = etiqueta("La contraseña se compara como hash SHA-256; nunca se guarda en texto plano.",
-                        tenue=True, ajustar=True)
-        nota.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        nota.setStyleSheet("font-size: 12px;")
-        caja.addWidget(nota)
 
         self.usuario.returnPressed.connect(self.contrasena.setFocus)
         self.contrasena.returnPressed.connect(self._entrar)
