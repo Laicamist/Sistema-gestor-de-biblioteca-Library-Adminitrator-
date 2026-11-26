@@ -2,6 +2,7 @@ from typing import List
 
 from config import DIAS_PRESTAMO, CONSULTAR, PRESTAMOS
 from Modelos import (
+    BibliotecaError,
     EjemplarConsulta,
     HistorialPrestamo,
     AlumnoNoEncontradoError,
@@ -24,8 +25,20 @@ class PrestamoServicio(ServicioBase):
         codigo = self._requerido(codigo_barras, "el código de barras", MAX_CODIGO)
         ejemplar = self._dao().consultar_ejemplar(codigo)
         if ejemplar is None:
-            raise EjemplarNoEncontradoError(f"No existe un ejemplar con el código {codigo}.")
+            raise EjemplarNoEncontradoError(self._mensaje_sin_ejemplar(codigo))
         return ejemplar
+
+    def _mensaje_sin_ejemplar(self, codigo: str) -> str:
+        """Si lo que se escaneó es el ISBN de un libro (la obra) y no la etiqueta de una
+        copia, lo dice; así no parece que el lector falló."""
+        try:
+            libro = self._dao().buscar_libro(codigo)
+        except BibliotecaError:  # el rol CONSULTA no puede leer LIBROS en MySQL
+            libro = None
+        if libro is None:
+            return f"No existe un ejemplar con el código {codigo}."
+        return (f"{codigo} es el ISBN de «{libro.titulo}», no la etiqueta de un ejemplar. "
+                "Escanea el código de la copia (cada ejemplar tiene el suyo; se ven en Catálogo).")
 
     def historial(self, matricula: str) -> List[HistorialPrestamo]:
         self._exigir(CONSULTAR)

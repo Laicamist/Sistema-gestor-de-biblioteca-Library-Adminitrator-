@@ -4,8 +4,8 @@ Guía para preparar la demostración con el lector físico y reunir las evidenci
 
 ## 1. Cómo usa el sistema el lector
 
-- El lector USB funciona como **teclado** (HID): al leer una etiqueta "escribe" el código en el campo que tiene el foco y manda **Enter**. No necesita controladores.
-- En la aplicación, el Enter del campo (`returnPressed`) dispara la consulta o el registro. Después de cada lectura el campo recupera el foco, así que se puede escanear una etiqueta tras otra sin tocar el mouse. Suena un tono de éxito o de error.
+- El lector USB funciona como **teclado** (HID): al leer una etiqueta "escribe" el código en el campo que tiene el foco y normalmente manda **Enter** al final. No necesita controladores.
+- En la aplicación, el fin de la lectura dispara la consulta o el registro. Los campos del lector (`CampoLector` en `src/UI/componentes.py`) lo detectan con Enter, con Tab o con un salto de línea, y si el lector no manda ningún sufijo, por la ráfaga rápida de teclas: unos 150 ms después del último carácter. Al escribir a mano hay que presionar Enter. Después de cada lectura el campo recupera el foco, así que se puede escanear una etiqueta tras otra sin tocar el mouse. Suena un tono de éxito o de error.
 - El código de cada copia está en `EJEMPLARES.CODIGO_BARRAS`, con `UNIQUE`, `CHECK` de no vacío y los triggers `TRG_VAL_EJEMPLARES_BI/BU`.
 - Las etiquetas usan **Code 128**, que el lector entrega exactamente como está impreso. No se usó EAN-13 porque ese formato agrega un dígito verificador que no coincidiría con los códigos guardados.
 
@@ -14,7 +14,7 @@ Guía para preparar la demostración con el lector físico y reunir las evidenci
 1. Ejecutar completo `Biblioteca.sql` en MySQL Workbench como `root`. Así los datos quedan como en las etiquetas; las fechas de los préstamos son relativas al día de hoy, así que los vencidos siempre aparecen vencidos.
 2. Revisar que exista el `.env` en la raíz del proyecto y abrir la aplicación con `python src/main.py`.
 3. Imprimir `etiquetas-codigos.pdf` **al 100 %** (sin "ajustar a la página"). Recortar y pegar las de la sección 1 en libros o tarjetas; las credenciales pueden quedarse en hoja.
-4. Probar el lector en el Bloc de notas: al escanear `7501000000011` debe aparecer el código y un salto de línea. Si no hay salto de línea, configurar el sufijo "Enter/CR" con la hoja de configuración del fabricante.
+4. Probar el lector en el Bloc de notas: al escanear `7501000000011` debe aparecer el código completo. Lo ideal es que también salte de línea (sufijo "Enter/CR"), pero la aplicación funciona aunque el lector no mande sufijo o mande Tab.
 5. Si se va a correr `src/pruebas_bd.py`, hacerlo **antes** del paso 1, porque esas pruebas cambian datos.
 
 ## 3. Guion de la demostración
@@ -102,7 +102,8 @@ SELECT * FROM V_PRESTAMOS_VENCIDOS;
 
 | Síntoma | Causa probable |
 | --- | --- |
-| El código aparece pero no pasa nada | El lector no manda Enter: configurar el sufijo CR/Enter. |
+| El código aparece pero no pasa nada | Ya no debería pasar: la aplicación lee aunque el lector no mande Enter. Si sigue igual, revisar la terminal donde se ejecutó `python src/main.py`; cualquier error del lector ahora también sale en rojo en la pantalla. |
 | Aparecen letras o símbolos raros | Distribución de teclado distinta entre el lector y Windows: configurar el lector en "US keyboard" o en el idioma del sistema. |
 | No se lee la etiqueta | Se imprimió reducida: imprimir al 100 % y acercar el lector a 10–15 cm. |
 | "No existe un ejemplar con el código…" en un código de la hoja | La base no tiene los datos de prueba: volver a ejecutar `Biblioteca.sql`. |
+| "… es el ISBN de «…», no la etiqueta de un ejemplar" | Se escaneó el código de barras de la contraportada (ISBN) de un libro que tiene copias con etiqueta propia: escanear la etiqueta del ejemplar. |

@@ -1,3 +1,4 @@
+import traceback
 from datetime import date, timedelta
 
 from PySide6.QtCore import Qt, QTimer
@@ -10,7 +11,8 @@ from config import ALUMNOS, CATALOGO, CONSULTAR, DIAS_PRESTAMO, PRESTAMOS
 from Modelos import BibliotecaError, SinConexionError
 from UI import iconos, tema
 from UI.componentes import (
-    Aviso, BotonIcono, Dato, EtiquetaIcono, Insignia, PanelVidrio, boton_gel, etiqueta, fecha_texto, repulir,
+    Aviso, BotonIcono, CampoLector, Dato, EtiquetaIcono, Insignia, PanelVidrio, boton_gel, etiqueta,
+    fecha_texto, repulir,
 )
 from UI.pantallas.base import Pantalla
 
@@ -96,8 +98,9 @@ class Lectura(QFrame):
 
 class PantallaLector(Pantalla):
     """Lector de código de barras. El escáner funciona como teclado: escribe el código
-    y manda un Enter; ese Enter (returnPressed) dispara la operación en MySQL:
-    consultar (SP_CONSULTAR_EJEMPLAR), prestar (SP_REGISTRAR_PRESTAMO),
+    y manda un sufijo (Enter, Tab o nada, según cómo esté configurado). CampoLector
+    detecta el fin de la lectura en cualquiera de esos casos y emite `leido`, que dispara
+    la operación en MySQL: consultar (SP_CONSULTAR_EJEMPLAR), prestar (SP_REGISTRAR_PRESTAMO),
     devolver (SP_REGISTRAR_DEVOLUCION) o dar de alta un ejemplar (INSERT con triggers)."""
 
     def __init__(self, ventana, parent=None):
@@ -152,14 +155,14 @@ class PantallaLector(Pantalla):
         self.rotulo = etiqueta("", "seccion")
         self.rotulo.setStyleSheet("font-size: 14px; font-weight: 600;")
         caja.addWidget(self.rotulo)
-        self.campo = QLineEdit()
+        self.campo = CampoLector()
         self.campo.setObjectName("lector")
         self.campo.setMaxLength(30)
         self.campo.setPlaceholderText("Escanea o escribe el código y presiona Enter")
         self.campo.setClearButtonEnabled(True)
         self._accion_lector = self.campo.addAction(
             iconos.icono("lector", tema.color("acento"), tam=26), QLineEdit.ActionPosition.LeadingPosition)
-        self.campo.returnPressed.connect(self._leer)
+        self.campo.leido.connect(lambda: self._proteger(self._leer, codigo=self.campo.text().strip()))
         caja.addWidget(self.campo)
         self.ayuda = etiqueta("El campo conserva el foco: después de cada lectura queda listo para la siguiente.",
                               tenue=True, ajustar=True)
@@ -207,12 +210,13 @@ class PantallaLector(Pantalla):
         rotulo = etiqueta("2 · Alumno: escanea la credencial o escribe la matrícula")
         rotulo.setStyleSheet("font-size: 14px; font-weight: 600;")
         paso.addWidget(rotulo)
-        self.matricula = QLineEdit()
+        self.matricula = CampoLector()
         self.matricula.setMaxLength(15)
         self.matricula.setPlaceholderText("Matrícula y Enter")
         self._accion_credencial = self.matricula.addAction(
             iconos.icono("credencial", tema.color("tenue")), QLineEdit.ActionPosition.LeadingPosition)
-        self.matricula.returnPressed.connect(self._leer_matricula)
+        self.matricula.leido.connect(
+            lambda: self._proteger(self._leer_matricula, codigo=self.matricula.text().strip()))
         paso.addWidget(self.matricula)
 
         self.tarjeta_alumno = QFrame()
@@ -239,7 +243,7 @@ class PantallaLector(Pantalla):
 
         botones = QHBoxLayout()
         self.boton_prestar = boton_gel(f"Registrar préstamo · {DIAS_PRESTAMO} días", "prestar")
-        self.boton_prestar.clicked.connect(self._registrar_prestamo)
+        self.boton_prestar.clicked.connect(lambda *_: self._proteger(self._registrar_prestamo))
         cancelar = BotonIcono("Cancelar")
         cancelar.clicked.connect(self._reiniciar_prestamo)
         botones.addWidget(self.boton_prestar)
@@ -285,15 +289,15 @@ class PantallaLector(Pantalla):
         caja.addWidget(self.confirmacion_alta)
         botones = QHBoxLayout()
         self.boton_alta = boton_gel("Registrar ejemplar", "agregar")
-        self.boton_alta.clicked.connect(self._registrar_alta)
+        self.boton_alta.clicked.connect(lambda *_: self._proteger(self._registrar_alta))
         cancelar = BotonIcono("Cancelar")
         cancelar.clicked.connect(self._reiniciar_alta)
         botones.addWidget(self.boton_alta)
         botones.addWidget(cancelar)
         botones.addStretch(1)
         caja.addLayout(botones)
-        nota = etiqueta("Elige el libro y la ubicación, escanea la etiqueta nueva y confirma con Enter "
-                        "o con el botón.", tenue=True, ajustar=True)
+        nota = etiqueta("Elige el libro y la ubicación, escanea la etiqueta nueva y confirma con Enter, "
+                        "escaneándola otra vez o con el botón.", tenue=True, ajustar=True)
         nota.setStyleSheet("font-size: 13px;")
         caja.addWidget(nota)
         return pagina
@@ -563,6 +567,20 @@ class PantallaLector(Pantalla):
             self._enfocar()
 
     # Llamadas a los servicios
+
+    def _proteger(self, accion, codigo: str = ""):
+        """Ejecuta una lectura o un botón sin que un error se pierda en la consola: si algo
+        falla fuera de los servicios (al llenar la ficha, por ejemplo), se avisa en rojo,
+        suena el tono de error y la traza completa queda en la terminal."""
+        try:
+            accion()
+        except Exception as error:  # noqa: BLE001 - la pantalla nunca debe quedarse sin respuesta
+            traceback.print_exc()
+            mensaje = f"No se pudo procesar la lectura: {error}"
+            self.resultado.mostrar(mensaje, "error", 0)
+            self.ventana.sonidos.reproducir("error")
+            self._agregar_lectura("error", "Lectura no procesada", f"{mensaje}\n{codigo}" if codigo else mensaje)
+            self._enfocar()
 
     def _llamar(self, funcion, *args, titulo_error: str = "Error", codigo: str = ""):
         """Ejecuta un servicio; si falla muestra el mensaje (del trigger o del servicio)

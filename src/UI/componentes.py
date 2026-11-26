@@ -4,13 +4,16 @@ Todas reaccionan al cambio de tema: se conectan a `tema.gestor.cambiado` con un
 método propio, así Qt desconecta la señal solo cuando el widget se destruye.
 """
 import csv
+import time
 
-from PySide6.QtCore import QEasingCurve, QObject, QPointF, QPropertyAnimation, QSettings, QSize, QTimer, QUrl, Qt
+from PySide6.QtCore import (
+    QEasingCurve, QEvent, QObject, QPointF, QPropertyAnimation, QSettings, QSize, QTimer, QUrl, Qt, Signal,
+)
 from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter, QRadialGradient
 from PySide6.QtWidgets import (
     QAbstractItemView, QFileDialog, QFrame, QGraphicsDropShadowEffect, QGraphicsOpacityEffect, QHBoxLayout,
-    QHeaderView, QLabel, QMessageBox, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem, QVBoxLayout,
-    QWidget,
+    QHeaderView, QLabel, QLineEdit, QMessageBox, QPushButton, QSizePolicy, QTableWidget, QTableWidgetItem,
+    QVBoxLayout, QWidget,
 )
 
 from UI import iconos, tema
@@ -233,6 +236,98 @@ class Dato(QFrame):
 
     def poner(self, texto):
         self.valor.setText("—" if texto in (None, "") else str(texto))
+
+
+_TECLAS_EDICION = {
+    Qt.Key.Key_Backspace, Qt.Key.Key_Delete, Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Up,
+    Qt.Key.Key_Down, Qt.Key.Key_Home, Qt.Key.Key_End, Qt.Key.Key_Escape,
+}
+
+
+class CampoLector(QLineEdit):
+    """Campo donde escribe el lector de código de barras. Emite `leido` cuando termina una lectura.
+
+    El lector es un teclado (HID): escribe el código muy rápido y al final manda un sufijo.
+    Casi todos mandan Enter, pero hay modelos configurados para mandar Tab, un salto de
+    línea (Ctrl+J) o nada. Con un QLineEdit normal solo el Enter dispara `returnPressed`,
+    y con los demás el código aparecía en el campo sin que pasara nada. Aquí `leido` se
+    emite en todos los casos:
+      - con Enter (también el del teclado numérico), Ctrl+J o Ctrl+M;
+      - con Tab, si el campo tiene texto (vacío, Tab sigue cambiando de campo);
+      - si no llega ningún sufijo, al terminar una ráfaga de teclas tan rápida que solo
+        puede venir del lector. Al escribir a mano hay que presionar Enter, como siempre.
+    """
+
+    leido = Signal()
+
+    RAFAGA_MS = 60     # el lector deja menos de esto entre carácter y carácter
+    MIN_RAFAGA = 6     # caracteres seguidos a esa velocidad para tomarlo como lectura
+    SILENCIO_MS = 150  # tiempo sin teclas que marca el fin de una lectura sin sufijo
+    ECO_MS = 600       # un Enter que llega justo después de una lectura automática se ignora
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._ultima_tecla = None   # momento (ms) del último carácter escrito
+        self._rafaga = 0            # caracteres seguidos escritos a velocidad de lector
+        self._automatica = None     # (momento, texto) de la última lectura detectada sin sufijo
+        self._silencio = QTimer(self)
+        self._silencio.setSingleShot(True)
+        self._silencio.setInterval(self.SILENCIO_MS)
+        self._silencio.timeout.connect(self._fin_de_rafaga)
+
+    def event(self, evento):
+        # Tab se atiende antes de keyPressEvent (mueve el foco), por eso se atrapa aquí.
+        if (evento.type() == QEvent.Type.KeyPress and evento.key() == Qt.Key.Key_Tab
+                and evento.modifiers() == Qt.KeyboardModifier.NoModifier and self.text().strip()):
+            self._terminar()
+            return True
+        return super().event(evento)
+
+    def keyPressEvent(self, evento):
+        tecla, mods = evento.key(), evento.modifiers()
+        # Ctrl sin Alt (AltGr llega como Ctrl+Alt y escribe caracteres como @)
+        control = (bool(mods & Qt.KeyboardModifier.ControlModifier)
+                   and not bool(mods & Qt.KeyboardModifier.AltModifier))
+        if tecla in (Qt.Key.Key_Return, Qt.Key.Key_Enter) or (control and tecla in (Qt.Key.Key_J, Qt.Key.Key_M)):
+            self._terminar()
+            evento.accept()
+            return
+        texto = evento.text()
+        super().keyPressEvent(evento)
+        if texto and texto.isprintable() and not control:
+            self._contar_caracter(evento.timestamp() or int(time.monotonic() * 1000))
+        elif control or tecla in _TECLAS_EDICION:  # borrar, flechas, pegar...: ya no es una lectura
+            self._rafaga = 0
+            self._silencio.stop()
+        # Shift, Alt, Bloq Mayús... no cuentan ni cortan la ráfaga (el lector usa Shift en las mayúsculas)
+
+    def _contar_caracter(self, ahora_ms: int):
+        rapido = self._ultima_tecla is not None and 0 <= ahora_ms - self._ultima_tecla <= self.RAFAGA_MS
+        self._rafaga = self._rafaga + 1 if rapido else 1
+        self._ultima_tecla = ahora_ms
+        self._automatica = None
+        if self._rafaga >= self.MIN_RAFAGA:
+            self._silencio.start()  # se reinicia con cada carácter; vence cuando el lector termina
+        else:
+            self._silencio.stop()
+
+    def _fin_de_rafaga(self):
+        """El lector dejó de escribir y no mandó sufijo: la lectura terminó."""
+        if self._rafaga >= self.MIN_RAFAGA and self.text().strip():
+            self._rafaga = 0
+            self._automatica = (time.monotonic(), self.text())
+            self.leido.emit()
+
+    def _terminar(self):
+        """Llegó el sufijo (Enter, Tab, Ctrl+J o Ctrl+M) o el usuario presionó Enter."""
+        self._silencio.stop()
+        self._rafaga = 0
+        if self._automatica is not None:
+            momento, texto = self._automatica
+            self._automatica = None
+            if texto == self.text() and (time.monotonic() - momento) * 1000 < self.ECO_MS:
+                return  # sufijo atrasado de una lectura que ya se procesó: no repetirla
+        self.leido.emit()
 
 
 class Aviso(QFrame):

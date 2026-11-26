@@ -8,8 +8,8 @@ from config import ADMINISTRACION, MAX_PRESTAMOS_ACTIVOS
 from Modelos import BibliotecaError, SinConexionError
 from UI import iconos, tema
 from UI.componentes import (
-    Aviso, BotonIcono, Dato, Insignia, PanelVidrio, Tabla, boton_gel, celda_insignia, confirmar, etiqueta,
-    fecha_texto,
+    Aviso, BotonIcono, CampoLector, Dato, Insignia, PanelVidrio, Tabla, boton_gel, celda_insignia, confirmar,
+    etiqueta, fecha_texto,
 )
 from UI.pantallas.base import Pantalla
 
@@ -187,13 +187,13 @@ class PantallaAlumnos(Pantalla):
 
         barra = QHBoxLayout()
         barra.setSpacing(10)
-        self.buscar = QLineEdit()
+        self.buscar = CampoLector()
         self.buscar.setPlaceholderText("Buscar por matrícula o nombre (también con la credencial)")
         self.buscar.setClearButtonEnabled(True)
         self._accion_buscar = self.buscar.addAction(
             iconos.icono("credencial", tema.color("tenue")), QLineEdit.ActionPosition.LeadingPosition)
         self.buscar.textChanged.connect(self._filtrar)
-        self.buscar.returnPressed.connect(self._buscar_exacto)
+        self.buscar.leido.connect(self._buscar_exacto)  # Enter o fin de la lectura del lector
         barra.addWidget(self.buscar, 3)
         self.filtro_carrera = QComboBox()
         self.filtro_carrera.setMinimumWidth(220)

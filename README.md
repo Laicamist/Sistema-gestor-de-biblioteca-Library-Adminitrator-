@@ -54,7 +54,7 @@ Usuarios de MySQL que crea `04_seguridad.sql`: `BIB_LOGIN` (solo ejecuta `SP_LOG
 
 ## Lector de código de barras
 
-El lector escribe el código en el campo que tiene el foco y manda Enter. La aplicación reacciona a ese Enter:
+El lector escribe el código en el campo que tiene el foco y al final manda un sufijo, normalmente Enter. La aplicación procesa la lectura con Enter, con Tab o, si el lector está configurado sin sufijo, en cuanto termina de escribir (reconoce la ráfaga rápida del lector; al escribir a mano hay que presionar Enter):
 
 - **Lector → Consultar:** escanea un ejemplar y ve título, ubicación, estado, a quién está prestado y si está vencido (`SP_CONSULTAR_EJEMPLAR`).
 - **Lector → Prestar:** escanea el ejemplar, luego la credencial del alumno (o escribe la matrícula) y confirma con un segundo Enter (`SP_REGISTRAR_PRESTAMO`, con transacción).

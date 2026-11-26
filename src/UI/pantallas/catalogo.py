@@ -10,7 +10,8 @@ from Logic.catalogo_servicio import ESTADOS_MANUALES
 from Modelos import BibliotecaError, SinConexionError
 from UI import iconos, tema
 from UI.componentes import (
-    Aviso, BotonIcono, Insignia, PanelVidrio, Tabla, boton_gel, celda_insignia, confirmar, etiqueta,
+    Aviso, BotonIcono, CampoLector, Insignia, PanelVidrio, Tabla, boton_gel, celda_insignia, confirmar,
+    etiqueta,
 )
 from UI.pantallas.base import Pantalla
 
@@ -165,13 +166,13 @@ class PantallaCatalogo(Pantalla):
 
         barra = QHBoxLayout()
         barra.setSpacing(10)
-        self.buscar = QLineEdit()
+        self.buscar = CampoLector()
         self.buscar.setPlaceholderText("Buscar por título, autor o ISBN (también con el lector)")
         self.buscar.setClearButtonEnabled(True)
         self._accion_buscar = self.buscar.addAction(
             iconos.icono("buscar", tema.color("tenue")), QLineEdit.ActionPosition.LeadingPosition)
         self.buscar.textChanged.connect(self._filtrar)
-        self.buscar.returnPressed.connect(self._buscar_exacto)
+        self.buscar.leido.connect(self._buscar_exacto)  # Enter o fin de la lectura del lector
         barra.addWidget(self.buscar, 3)
         self.filtro_categoria = QComboBox()
         self.filtro_categoria.setMinimumWidth(220)
