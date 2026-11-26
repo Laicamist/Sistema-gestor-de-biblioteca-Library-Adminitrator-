@@ -16,8 +16,9 @@ class Pantalla(QWidget):
         self.sesiones = ventana.sesiones
         self.servicios = ventana.servicios
 
-    def al_mostrar(self):
-        """Se llama cada vez que el usuario abre la pantalla (para recargar datos)."""
+    def al_mostrar(self, **opciones):
+        """Se llama cada vez que el usuario abre la pantalla (para recargar datos).
+        `opciones` llegan desde otra pantalla, por ejemplo modo="prestar" para el lector."""
 
     def avisar(self, texto: str, tipo: str = "info", duracion_ms: int = 6000):
         self.ventana.avisar(texto, tipo, duracion_ms)

@@ -67,6 +67,8 @@ QLabel#tituloPantalla { font-size: 28px; font-weight: 800; }
 QLabel#subtituloPantalla { font-size: 15px; color: $tenue; }
 QLabel#seccion { font-size: 17px; font-weight: 700; }
 QLabel#dato { font-size: 36px; font-weight: 800; }
+QLabel#datoError { font-size: 36px; font-weight: 800; color: $error; }
+QLabel#datoSecundario { font-size: 18px; font-weight: 600; color: $tenue; }
 QLabel#chip { background: $vidrio; border: 1px solid $vidrio_borde; border-radius: 15px;
     padding: 6px 14px; color: $acento; font-size: 13px; font-weight: 600; }
 QLabel#avatar { background: $campo; color: $acento; border-radius: 20px; font-weight: 700; }
@@ -104,6 +106,9 @@ QPushButton#nav { text-align: left; border: 1px solid transparent; border-radius
     padding: 10px 14px; font-size: 15px; font-weight: 500; }
 QPushButton#nav:hover { background: $acento_suave; }
 QPushButton#nav:checked { background: $gel; border: 1px solid #095f79; color: #ffffff; font-weight: 600; }
+QPushButton#accion { background: $vidrio; border: 1px solid $vidrio_borde; border-radius: 20px;
+    padding: 18px 22px; text-align: left; font-size: 16px; font-weight: 700; }
+QPushButton#accion:hover { background: $acento_suave; }
 QPushButton#segmento { border: 1px solid transparent; border-radius: 12px; padding: 10px 16px; }
 QPushButton#segmento:hover { background: $acento_suave; }
 QPushButton#segmento:checked { background: $gel; border: 1px solid #095f79; color: #ffffff; }
@@ -128,6 +133,9 @@ QTableView::item { padding: 6px 10px; border-bottom: 1px solid $linea; }
 QHeaderView::section { background: transparent; color: $tenue; border: none; border-bottom: 1px solid $linea;
     padding: 8px 10px; font-size: 12px; font-weight: 600; }
 QTableCornerButton::section { background: transparent; border: none; }
+
+QProgressBar { background: $acento_suave; border: none; border-radius: 5px; min-height: 10px; max-height: 10px; }
+QProgressBar::chunk { background: $gel; border-radius: 5px; }
 
 QTabWidget::pane { border: none; }
 QTabBar::tab { background: transparent; border: 1px solid transparent; border-radius: 12px;
