@@ -18,6 +18,7 @@ from UI.pantallas.lector import PantallaLector
 from UI.pantallas.login import PantallaLogin
 from UI.pantallas.pendiente import PantallaPendiente
 from UI.pantallas.reportes import PantallaReportes
+from UI.pantallas.usuarios import PantallaUsuarios
 
 
 @dataclass(frozen=True)
@@ -52,6 +53,7 @@ PANTALLAS = {
     "alumnos": PantallaAlumnos,
     "reportes": PantallaReportes,
     "auditoria": PantallaAuditoria,
+    "usuarios": PantallaUsuarios,
 }
 
 
