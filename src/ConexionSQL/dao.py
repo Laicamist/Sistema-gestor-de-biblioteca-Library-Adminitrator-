@@ -224,6 +224,13 @@ class DAO:
              libro.id_categoria))
         return libro.id_libro
 
+    def actualizar_libro(self, libro: Libro) -> int:
+        return self._ejecutar(
+            "UPDATE LIBROS SET isbn = %s, titulo = %s, autor = %s, editorial = %s, anio = %s, "
+            "id_categoria = %s WHERE id_libro = %s",
+            (libro.isbn, libro.titulo, libro.autor, libro.editorial, libro.anio,
+             libro.id_categoria, libro.id_libro))
+
     def eliminar_libro(self, id_libro: int) -> int:
         """Lo registra TRG_AUD_LIBROS_AD. Falla si el libro tiene ejemplares (FK)."""
         return self._ejecutar("DELETE FROM LIBROS WHERE id_libro = %s", (id_libro,))

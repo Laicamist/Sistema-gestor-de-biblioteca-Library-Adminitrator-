@@ -54,24 +54,40 @@ class CatalogoServicio(ServicioBase):
     def registrar_libro(self, isbn: str, titulo: str, autor: str, id_categoria: int,
                         editorial: Optional[str] = None, anio=None) -> Libro:
         self._exigir(CATALOGO)
-        isbn = self._requerido(isbn, "el ISBN", MAX_ISBN)
-        if self._dao().buscar_libro(isbn) is not None:
-            raise DatosInvalidosError(f"Ya existe un libro con el ISBN {isbn}.")
+        libro = self._armar_libro(isbn, titulo, autor, id_categoria, editorial, anio)
+        if self._dao().buscar_libro(libro.isbn) is not None:
+            raise DatosInvalidosError(f"Ya existe un libro con el ISBN {libro.isbn}.")
+        self._dao().agregar_libro(libro)
+        return libro
+
+    def actualizar_libro(self, id_libro: int, isbn: str, titulo: str, autor: str, id_categoria: int,
+                         editorial: Optional[str] = None, anio=None) -> Libro:
+        """Corrige los datos de un libro. El ISBN puede cambiar si no lo usa otro libro."""
+        self._exigir(CATALOGO)
+        libro = self._armar_libro(isbn, titulo, autor, id_categoria, editorial, anio)
+        libro.id_libro = self._entero(id_libro, "el libro", 1)
+        otro = self._dao().buscar_libro(libro.isbn)
+        if otro is not None and otro.id_libro != libro.id_libro:
+            raise DatosInvalidosError(f"Ya existe otro libro con el ISBN {libro.isbn}.")
+        # Sin revisar filas afectadas: MySQL reporta 0 si se guarda sin cambios.
+        self._dao().actualizar_libro(libro)
+        return libro
+
+    def _armar_libro(self, isbn, titulo, autor, id_categoria, editorial, anio) -> Libro:
+        """Valida y normaliza los datos de un libro (mayúsculas, tamaños, año)."""
         if anio not in (None, ""):
             anio = self._entero(anio, "el año", 1, date.today().year)
         else:
             anio = None
         editorial = self._opcional(editorial, "la editorial", MAX_EDITORIAL)
-        libro = Libro(
-            isbn=isbn,
+        return Libro(
+            isbn=self._requerido(isbn, "el ISBN", MAX_ISBN),
             titulo=self._requerido(titulo, "el título", MAX_TITULO).upper(),
             autor=self._requerido(autor, "el autor", MAX_AUTOR).upper(),
             id_categoria=self._entero(id_categoria, "la categoría", 1),
             editorial=editorial.upper() if editorial else None,
             anio=anio,
         )
-        self._dao().agregar_libro(libro)
-        return libro
 
     def eliminar_libro(self, id_libro: int) -> None:
         """Solo administrador. La base no deja borrar un libro que tenga ejemplares;

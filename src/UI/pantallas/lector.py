@@ -344,6 +344,11 @@ class PantallaLector(Pantalla):
             self.cambiar_modo(modo)
         elif self.modo == "alta":
             self._cargar_libros()
+        id_libro = opciones.get("id_libro")
+        if id_libro is not None and self.modo == "alta":
+            indice = self.libros.findData(id_libro)  # viene del catálogo: libro ya elegido
+            if indice >= 0:
+                self.libros.setCurrentIndex(indice)
         self._enfocar()
 
     def cambiar_modo(self, modo: str):
