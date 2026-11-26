@@ -11,6 +11,7 @@ from UI.componentes import (
     Aviso, BotonIcono, FondoAero, LogoGel, PanelVidrio, Sonidos, etiqueta, fundido,
 )
 from UI.pantallas.inicio import PantallaInicio
+from UI.pantallas.lector import PantallaLector
 from UI.pantallas.login import PantallaLogin
 from UI.pantallas.pendiente import PantallaPendiente
 
@@ -42,6 +43,7 @@ MODULOS = (
 # agrega aquí su pantalla; las que falten se muestran como "en construcción".
 PANTALLAS = {
     "inicio": PantallaInicio,
+    "lector": PantallaLector,
 }
 
 
