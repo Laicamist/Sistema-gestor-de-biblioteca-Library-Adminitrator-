@@ -225,3 +225,17 @@ class AlumnoConVencidos:
     libros_vencidos: int
     total_dias_retraso: int
     max_dias_retraso: int
+
+
+@dataclass
+class ResumenBiblioteca:
+    """Vista v_resumen: contadores de la pantalla de inicio."""
+    prestamos_activos: int
+    prestamos_vencidos: int
+    alumnos_con_retraso: int
+    ejemplares_disponibles: int
+    total_ejemplares: int
+    en_mantenimiento: int
+    de_baja: int
+    alumnos_activos: int
+    total_alumnos: int
