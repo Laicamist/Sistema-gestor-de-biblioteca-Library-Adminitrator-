@@ -10,6 +10,7 @@ from UI import tema
 from UI.componentes import (
     Aviso, BotonIcono, FondoAero, LogoGel, PanelVidrio, Sonidos, etiqueta, fundido,
 )
+from UI.pantallas.inicio import PantallaInicio
 from UI.pantallas.login import PantallaLogin
 from UI.pantallas.pendiente import PantallaPendiente
 
@@ -39,7 +40,9 @@ MODULOS = (
 
 # Clase de cada pantalla ya construida (clave -> clase). Cada parte de la interfaz
 # agrega aquí su pantalla; las que falten se muestran como "en construcción".
-PANTALLAS = {}
+PANTALLAS = {
+    "inicio": PantallaInicio,
+}
 
 
 class BarraLateral(PanelVidrio):
@@ -230,8 +233,9 @@ class VentanaPrincipal(QMainWindow):
 
     # Navegación
 
-    def mostrar(self, clave: str):
-        """Abre un módulo. Cada pantalla se crea la primera vez que se abre y luego se reutiliza."""
+    def mostrar(self, clave: str, **opciones):
+        """Abre un módulo. Cada pantalla se crea la primera vez que se abre y luego se reutiliza.
+        Las `opciones` se pasan a `al_mostrar` (por ejemplo, el modo inicial del lector)."""
         if self.escritorio is None or clave not in self._modulos:
             return
         modulo = self._modulos[clave]
@@ -248,7 +252,7 @@ class VentanaPrincipal(QMainWindow):
         self.escritorio.paginas.setCurrentWidget(pagina)
         fundido(pagina)
         try:
-            pagina.al_mostrar()
+            pagina.al_mostrar(**opciones)
         except Exception as error:  # noqa: BLE001
             self.avisar(f"No se pudo cargar {modulo.texto}: {error}", "error", 0)
 
