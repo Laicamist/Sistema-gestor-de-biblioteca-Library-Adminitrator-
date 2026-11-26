@@ -24,6 +24,7 @@ from .entidades import (
     LibroSinPrestamos,
     DisponibilidadLibro,
     AlumnoConVencidos,
+    ResumenBiblioteca,
 )
 from .excepciones import (
     BibliotecaError,
