@@ -46,7 +46,7 @@ def main():
         from UI.app import iniciar
     except ImportError as e:
         print("No se pudo cargar la interfaz. Instala las dependencias con:\n"
-              "    pip install -r Requisitos.txt\n\n"
+              "    pip install -r requirements.txt\n\n"
               f"Detalle: {e}")
         if dao is not None:
             dao.cerrar()

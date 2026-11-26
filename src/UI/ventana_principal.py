@@ -16,7 +16,6 @@ from UI.pantallas.catalogo import PantallaCatalogo
 from UI.pantallas.inicio import PantallaInicio
 from UI.pantallas.lector import PantallaLector
 from UI.pantallas.login import PantallaLogin
-from UI.pantallas.pendiente import PantallaPendiente
 from UI.pantallas.reportes import PantallaReportes
 from UI.pantallas.usuarios import PantallaUsuarios
 
@@ -28,24 +27,23 @@ class Modulo:
     icono: str
     permiso: str        # permiso de config.PERMISOS que necesita el rol para verlo
     subtitulo: str
-    parte: int          # parte de la interfaz en la que se construye la pantalla
 
 
 # Orden de la barra lateral. Solo aparecen los módulos que el rol tiene permitidos.
 MODULOS = (
-    Modulo("inicio", "Inicio", "inicio", CONSULTAR, "Así está la biblioteca hoy.", 3),
+    Modulo("inicio", "Inicio", "inicio", CONSULTAR, "Así está la biblioteca hoy."),
     Modulo("lector", "Lector", "lector", CONSULTAR,
-           "Escanea una etiqueta: el lector manda el código y un Enter.", 4),
-    Modulo("catalogo", "Catálogo", "libro", CATALOGO, "Libros, ejemplares y categorías.", 5),
-    Modulo("alumnos", "Alumnos", "alumnos", ALUMNOS, "Alta, cambios e historial de préstamos.", 6),
-    Modulo("reportes", "Reportes", "reportes", REPORTES, "Consultas para la toma de decisiones.", 7),
+           "Escanea una etiqueta: el lector manda el código y un Enter."),
+    Modulo("catalogo", "Catálogo", "libro", CATALOGO, "Libros, ejemplares y categorías."),
+    Modulo("alumnos", "Alumnos", "alumnos", ALUMNOS, "Alta, cambios e historial de préstamos."),
+    Modulo("reportes", "Reportes", "reportes", REPORTES, "Consultas para la toma de decisiones."),
     Modulo("auditoria", "Auditoría", "auditoria", ADMINISTRACION,
-           "Bitácora de cambios que registran los triggers.", 7),
-    Modulo("usuarios", "Usuarios", "usuarios", ADMINISTRACION, "Cuentas del sistema y sus roles.", 8),
+           "Bitácora de cambios que registran los triggers."),
+    Modulo("usuarios", "Usuarios", "usuarios", ADMINISTRACION, "Cuentas del sistema y sus roles."),
 )
 
-# Clase de cada pantalla ya construida (clave -> clase). Cada parte de la interfaz
-# agrega aquí su pantalla; las que falten se muestran como "en construcción".
+# Clase de la pantalla de cada módulo (clave -> clase). Cada pantalla vive en su propio
+# archivo dentro de UI/pantallas/.
 PANTALLAS = {
     "inicio": PantallaInicio,
     "lector": PantallaLector,
@@ -253,8 +251,7 @@ class VentanaPrincipal(QMainWindow):
         modulo = self._modulos[clave]
         pagina = self._paginas.get(clave)
         if pagina is None:
-            clase = PANTALLAS.get(clave)
-            pagina = clase(self) if clase is not None else PantallaPendiente(self, modulo)
+            pagina = PANTALLAS[clave](self)
             self.escritorio.paginas.addWidget(pagina)
             self._paginas[clave] = pagina
         self.escritorio.titulo.setText(modulo.texto)
